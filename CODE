@@ -1,0 +1,74 @@
+/*
+ * Bathroom Fumigation System
+ * This program uses a PIR sensor to detect human presence in a bathroom.
+ * When a person leaves the bathroom, it activates a DC motor to dispense a sanitizing liquid
+ * and turns on an LED to indicate the fumigation process. After a certain delay, it turns off the DC motor
+ * and LED.
+ *
+ * Components:
+ * - PIR Sensor
+ * - DC Motor
+ * - LED
+ *
+ * Wiring:
+ * - PIR Sensor Output to Arduino Digital Pin 2
+ * - DC Motor Control Pin to Arduino Digital Pin 8
+ * - LED Control Pin to Arduino Digital Pin 8
+ *
+ * Author: Reshika N
+ * Created on 26th August 2023
+ *
+ * Note: Make sure to connect appropriate power and ground connections for each component.
+ */
+
+#define DCwater_pump 8
+#define pir 2
+
+unsigned long time1, time2;
+int previousstate = 0;
+
+void setup() {
+  pinMode(DCwater_pump, OUTPUT);
+  pinMode(pir, INPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  pirsensor();
+}
+
+void pirsensor() {
+  int readPin = digitalRead(pir);
+  Serial.println(readPin);
+
+  if (readPin == LOW && previousstate == HIGH) {
+    time1 = millis() / 1000;
+    int sense = 0;
+
+    // Wait up to 5 seconds to see whether motion returns
+    while (sense == 0 && millis() / 1000 - time1 < 5) {
+      sense = digitalRead(pir);
+    }
+
+    time2 = millis() / 1000;
+
+    // Run the pump for up to 10 seconds, or until motion is detected
+    while (sense == 0 && millis() / 1000 - time2 < 10) {
+      sense = digitalRead(pir);
+      digitalWrite(DCwater_pump, HIGH);
+      Serial.println("DC Pump is ON Now!!");
+    }
+
+    digitalWrite(DCwater_pump, LOW);
+    Serial.println("DC Pump is OFF Now!");
+  }
+  else {
+    digitalWrite(DCwater_pump, LOW);
+    Serial.println("DC Pump is OFF Now!!");
+    delay(500);
+  }
+
+  previousstate = readPin;
+  Serial.println(previousstate);
+}
+
